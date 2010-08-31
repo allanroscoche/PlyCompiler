@@ -1,20 +1,42 @@
 
-tokens = (
-    'NAME','NUMBER',
-    'PLUS','MINUS','TIMES','DIVIDE','EQUALS',
-    'LPAREN','RPAREN',
-    )
+reserved = {
+    'if':'IF',
+    'then':'THEN',
+    'else': 'ELSE',
+    'program': 'PROGRAM',
+    'begin': 'BEGIN',
+    'end': 'END',
+    'procedure': 'PROCEDURE',
+    'while': 'WHILE',
+    
+    }
+    
+
+tokens = [
+    'NUMBER',
+    'PLUS','MINUS','TIMES','DIVIDE','ATTRIB',
+    'LESS', 'LESS_EQ', 'MORE', 'MORE_EQ',
+    'LPAREN','RPAREN','ID'
+    ]+list(reserved.values())
 
 # Tokens
 
+t_MORE    = r'>'
+t_LESS    = r'<'
+t_MORE_EQ = r'<='
+t_LESS_EQ = r'>='
 t_PLUS    = r'\+'
 t_MINUS   = r'-'
 t_TIMES   = r'\*'
 t_DIVIDE  = r'/'
-t_EQUALS  = r'='
+t_ATTRIB  = r':='
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
-t_NAME    = r'[a-zA-Z_][a-zA-Z0-9_]*'
+
+def t_ID(t):
+    r'[a-zA-Z_][a-zA-Z_0-9]*'
+    t.type = reserved.get(t.value,'ID')
+    return t
 
 def t_NUMBER(t):
     r'\d+'
@@ -43,6 +65,7 @@ lex.lex()
 # Parsing rules
 
 precedence = (
+    ('left','LESS','MORE','LESS_EQ','MORE_EQ'),
     ('left','PLUS','MINUS'),
     ('left','TIMES','DIVIDE'),
     ('right','UMINUS'),
@@ -51,13 +74,21 @@ precedence = (
 # dictionary of names
 names = { }
 
+def p_statement_if(t):
+    'statement : IF expression_if THEN statement'
+    print "NADA"
+
 def p_statement_assign(t):
-    'statement : NAME EQUALS expression'
+    'statement : ID ATTRIB expression'
+    print "ARMZ "+str(t[1])
     names[t[1]] = t[3]
 
 def p_statement_expr(t):
     'statement : expression'
-    #print t[1]
+
+def p_statement_expr_if(t):
+    'expression_if : expression'
+    print "DSVF"
 
 def p_expression_binop(t):
     '''expression : expression PLUS expression
@@ -82,8 +113,8 @@ def p_expression_number(t):
     print "CRCT "+ str(t[1])
     t[0] = t[1]
 
-def p_expression_name(t):
-    'expression : NAME'
+def p_expression_id(t):
+    'expression : ID'
     try:
         t[0] = names[t[1]]
     except LookupError:
