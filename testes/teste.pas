@@ -1,4 +1,5 @@
 program allan;
+var allan : integer ;
 begin
    if 2>3 then
       allan:=3;

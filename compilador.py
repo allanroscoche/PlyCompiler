@@ -9,31 +9,43 @@ reserved = {
     'end'      :  'END',
     'procedure':  'PROCEDURE',
     'while'    :  'WHILE',
-    'do'       :  'DO'
+    'do'       :  'DO',
+    'var'      :  'VAR',
+    'integer'  :  'INTEGER',
+    'float'    :  'FLOAT',
+    'write'    :  'WRITE',
+    'read'     :  'READ',
+    'function' :  'FUNCTION',
+    'procedure':  'PROCEDURE',
+    'div'      :  'DIVIDE'
     }
 
 tokens = [
-    'NUMBER',
-    'PLUS','MINUS','TIMES','DIVIDE','ATTRIB',
+    'NUMBER', 'CMD', 'FIM', 'DPONTOS', 'VIRG',
+    'PLUS','MINUS','TIMES','ATTRIB',
     'LESS', 'LESS_EQ', 'MORE', 'MORE_EQ','EQUAL','DIFF',
     'LPAREN','RPAREN','ID'
     ]+list(reserved.values())
 
 # Tokens
 
+t_FIM     = r'.'
+t_CMD     = r'\;'
 t_MORE    = r'>'
 t_LESS    = r'<'
 t_MORE_EQ = r'<='
 t_LESS_EQ = r'>='
-t_EQUAL   = r'=='
+t_EQUAL   = r'='
 t_DIFF    = r'!='
 t_PLUS    = r'\+'
 t_MINUS   = r'-'
 t_TIMES   = r'\*'
-t_DIVIDE  = r'/'
-t_ATTRIB  = r':='
+#t_DIVIDE  = r'/'
+t_ATTRIB  = r'\:='
 t_LPAREN  = r'\('
 t_RPAREN  = r'\)'
+t_DPONTOS = r'\:'
+t_VIRG    = r','
 
 def t_ID(t):
     r'[a-zA-Z_][a-zA-Z_0-9]*'
@@ -52,9 +64,10 @@ def t_NUMBER(t):
 # Ignored characters
 t_ignore = " \t"
 
+contador=0
+
 def t_newline(t):
     r'\n+'
-    t.lexer.lineno += t.value.count("\n")
 
 def t_error(t):
     print "Illegal character '%s'" % t.value[0]
@@ -63,6 +76,9 @@ def t_error(t):
 # Build the lexer
 import ply.lex as lex
 lex.lex()
+
+import tabela
+rotulo = tabela.Rotulo()
 
 # Parsing rules
 
@@ -76,33 +92,109 @@ precedence = (
 # dictionary of names
 names = { }
 
+def p_statement_init(t):
+    '''programa : program ID CMD bloco FIM
+                | program ID LPAREN lista_identificadores RPAREN CMD bloco FIM'''
+    print "\tPARA"
+
+def p_statement_program(t):
+    'program : PROGRAM'
+    print "\tINIT"
+
+def p_statement_bloco(t):
+    '''bloco : variaveis subrotinas comando_composto
+             | variaveis comando_composto
+             | subrotinas comando_composto
+             | comando_composto '''
+
+def p_statement_subrotinas(t):
+    '''subrotinas : funcao
+                  | procedimento
+                  | funcao subrotinas
+                  | procedimento subrotinas'''
+
+def p_statement_funcao(t):
+    'funcao : FUNCTION ID CMD comando_composto'
+    print "funcao"
+
+def p_statement_procedimento(t):
+    'procedimento : PROCEDURE ID CMD bloco CMD'
+    print "procedimento"
+
+def p_statement_variaveis(t):
+    'variaveis : VAR declaracao_variaveis'
+    print "\tAMEM"
+
+def p_statement_declaracao_variaveis(t):
+    '''declaracao_variaveis : lista_identificadores DPONTOS tipo CMD
+                            | lista_identificadores DPONTOS tipo CMD declaracao_variaveis'''
+
+def p_statement_tipo(t):
+    '''tipo : INTEGER
+            | FLOAT '''
+
+def p_statement_lista_identificadores(t):
+    '''lista_identificadores : ID
+                             | ID VIRG lista_identificadores'''
+
+def p_statement_comando_composto(t):
+    '''comando_composto : BEGIN comando END
+                        | BEGIN comando mais_comandos END'''
+
+def p_statement_mais_comandos(t):
+    '''mais_comandos : CMD comando
+                     | CMD comando mais_comandos '''
+
+def p_statement_comando(t):
+    '''comando : comando_composto
+               | atribuicao
+               | chamada_procedimento
+               | comando_repetitivo
+               | comando_condicional'''
+
+def p_statement_chamada_procedimento(t):
+    '''chamada_procedimento : ID
+                            | write LPAREN lista_identificadores RPAREN
+                            | read LPAREN lista_identificadores RPAREN
+                            | ID LPAREN lista_identificadores RPAREN '''
+
+def p_statement_write(t):
+    'write : WRITE'
+    print "\twrite"
+
+def p_statement_read(t):
+    'read : READ'
+    print "\tLEIT"
+
 def p_statement_if(t):
-    'statement : IF expression_if THEN statement'
-    print "NADA"
+    '''comando_condicional : IF expression_if THEN comando
+                           | IF expression_if THEN comando ELSE comando'''
+    print rotulo.nome() + "\tNADA"
+    rotulo.remove()
 
 def p_statement_while_do(t):
-    'statement : while expression_while DO statement'
-    print "NADA"
+    'comando_repetitivo : while expression_while DO comando'
+    print rotulo.nome() + "\tNADA"
+    rotulo.remove()
 
 def p_statement_while(t):
     'while : WHILE'
-    print "NADA"
+    print rotulo.nome() + "\tNADA"
 
-def p_statement_assign(t):
-    'statement : ID ATTRIB expression'
-    print "ARMZ "+str(t[1])
+def p_statement_atribuicao(t):
+    'atribuicao : ID ATTRIB expression'
+    print "\tARMZ "+str(t[1])
     names[t[1]] = t[3]
-
-def p_statement_expr(t):
-    'statement : expression'
 
 def p_statement_expr_if(t):
     'expression_if : expression'
-    print "DSVF"
+    rotulo.add()
+    print "\tDSVF " + rotulo.nome()
 
 def p_statement_expr_while(t):
     'expression_while : expression'
-    print "DSVF"
+    rotulo.add()
+    print "\tDSVF " + rotulo.nome()
 
 def p_expression_binop(t):
     '''expression : expression PLUS expression
@@ -115,16 +207,16 @@ def p_expression_binop(t):
                   | expression MORE_EQ expression
                   | expression EQUAL expression
                   '''
-    if t[2] == '+'   : print "SOMA"
-    elif t[2] == '-' : print "SUBT"
-    elif t[2] == '*' : print "MULT"
-    elif t[2] == '/' : print "DIVI"
-    elif t[2] == '>' : print "CM01"
-    elif t[2] == '<' : print "CM02"
-    elif t[2] == '>=': print "CM03"
-    elif t[2] == '<=': print "CM04"
-    elif t[2] == '==': print "CMEG"
-    elif t[2] == '!=': print "CMNE"
+    if   t[2] == '+'  : print "\tSOMA"
+    elif t[2] == '-'  : print "\tSUBT"
+    elif t[2] == '*'  : print "\tMULT"
+    elif t[2] == "div": print "\tDIVI"
+    elif t[2] == '>'  : print "\tCM01"
+    elif t[2] == '<'  : print "\tCM02"
+    elif t[2] == '>=' : print "\tCM03"
+    elif t[2] == '<=' : print "\tCM04"
+    elif t[2] == '==' : print "\tCMEG"
+    elif t[2] == '!=' : print "\tCMNE"
 
 def p_expression_uminus(t):
     'expression : MINUS expression %prec UMINUS'
@@ -136,7 +228,7 @@ def p_expression_group(t):
 
 def p_expression_number(t):
     'expression : NUMBER'
-    print "CRCT "+ str(t[1])
+    print "\tCRCT "+ str(t[1])
     t[0] = t[1]
 
 def p_expression_id(t):
@@ -150,12 +242,15 @@ def p_expression_id(t):
 def p_error(t):
     print "Syntax error at '%s'" % t.value
 
+import sys
 import ply.yacc as yacc
 yacc.yacc()
 
+s = ""
 while 1:
     try:
-        s = raw_input('entrada > ')
+        s += raw_input() + " "
     except EOFError:
         break
-    yacc.parse(s)
+print s
+yacc.parse(s)
