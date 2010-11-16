@@ -74,11 +74,15 @@ def t_error(t):
     t.lexer.skip(1)
 
 # Build the lexer
+import sys
 import ply.lex as lex
 lex.lex()
 
 import tabela
 rotulo = tabela.Rotulo()
+vars_g = tabela.VarGlobais()
+tipo = tabela.Tipo()
+tabela = tabela.Tabela()
 
 # Parsing rules
 
@@ -99,13 +103,14 @@ def p_statement_init(t):
 
 def p_statement_program(t):
     'program : PROGRAM'
-    print "\tINIT"
+    print "\tINPP"
 
 def p_statement_bloco(t):
     '''bloco : variaveis subrotinas comando_composto
              | variaveis comando_composto
              | subrotinas comando_composto
              | comando_composto '''
+    print "\tDMEM "+vars_g.total()
 
 def p_statement_subrotinas(t):
     '''subrotinas : funcao
@@ -123,19 +128,29 @@ def p_statement_procedimento(t):
 
 def p_statement_variaveis(t):
     'variaveis : VAR declaracao_variaveis'
-    print "\tAMEM"
+    print "\tAMEM "+vars_g.imprime()
 
 def p_statement_declaracao_variaveis(t):
-    '''declaracao_variaveis : lista_identificadores DPONTOS tipo CMD
-                            | lista_identificadores DPONTOS tipo CMD declaracao_variaveis'''
+    '''declaracao_variaveis : lista_identificadores_var DPONTOS tipo CMD
+                            | lista_identificadores_var DPONTOS tipo CMD declaracao_variaveis'''
 
 def p_statement_tipo(t):
     '''tipo : INTEGER
-            | FLOAT '''
+            | FLOAT   '''
+    if t[1] == "integer":
+        tabela.setType("integer")
+    else :
+        tabela.setType("float")
 
 def p_statement_lista_identificadores(t):
     '''lista_identificadores : ID
                              | ID VIRG lista_identificadores'''
+
+def p_statement_lista_identificadores_var(t):
+    '''lista_identificadores_var : ID
+                                 | ID VIRG lista_identificadores_var'''
+    vars_g.add()
+    tabela.add(t[1],"undefined")
 
 def p_statement_comando_composto(t):
     '''comando_composto : BEGIN comando END
@@ -143,7 +158,8 @@ def p_statement_comando_composto(t):
 
 def p_statement_mais_comandos(t):
     '''mais_comandos : CMD comando
-                     | CMD comando mais_comandos '''
+                     | CMD comando mais_comandos
+                     | CMD '''
 
 def p_statement_comando(t):
     '''comando : comando_composto
@@ -154,17 +170,21 @@ def p_statement_comando(t):
 
 def p_statement_chamada_procedimento(t):
     '''chamada_procedimento : ID
-                            | write LPAREN lista_identificadores RPAREN
-                            | read LPAREN lista_identificadores RPAREN
+                            | WRITE LPAREN lista_identificadores_write RPAREN
+                            | READ LPAREN lista_identificadores_read RPAREN
                             | ID LPAREN lista_identificadores RPAREN '''
 
-def p_statement_write(t):
-    'write : WRITE'
-    print "\twrite"
+def p_statement_lista_identificadores_write(t):
+    '''lista_identificadores_write : ID
+                                   | ID VIRG lista_identificadores_write '''
+    print "\tCRVL " + str(tabela.getEnd(t[1]))
+    print "\tIMPR"
 
-def p_statement_read(t):
-    'read : READ'
+def p_statement_lista_identificadores_read(t):
+    '''lista_identificadores_read : ID
+                                  | ID VIRG lista_identificadores_read'''
     print "\tLEIT"
+    print "\tARMZ " + str(tabela.getEnd(t[1]))
 
 def p_statement_if(t):
     '''comando_condicional : IF expression_if THEN comando
@@ -183,8 +203,12 @@ def p_statement_while(t):
 
 def p_statement_atribuicao(t):
     'atribuicao : ID ATTRIB expression'
-    print "\tARMZ "+str(t[1])
-    names[t[1]] = t[3]
+    if tabela.exists(t[1]):
+            print "\tARMZ "+str(tabela.getEnd(t[1]))
+            tipo.compara()
+    else:
+        sys.stderr.write("ERRO: variavel nao definida: "+t[1]+"\n")
+        raise SyntaxError
 
 def p_statement_expr_if(t):
     'expression_if : expression'
@@ -207,16 +231,17 @@ def p_expression_binop(t):
                   | expression MORE_EQ expression
                   | expression EQUAL expression
                   '''
+    tipo.compara()
     if   t[2] == '+'  : print "\tSOMA"
     elif t[2] == '-'  : print "\tSUBT"
     elif t[2] == '*'  : print "\tMULT"
     elif t[2] == "div": print "\tDIVI"
-    elif t[2] == '>'  : print "\tCM01"
-    elif t[2] == '<'  : print "\tCM02"
-    elif t[2] == '>=' : print "\tCM03"
-    elif t[2] == '<=' : print "\tCM04"
-    elif t[2] == '==' : print "\tCMEG"
-    elif t[2] == '!=' : print "\tCMNE"
+    elif t[2] == '>'  : print "\tCMMA"
+    elif t[2] == '<'  : print "\tCMME"
+    elif t[2] == '>=' : print "\tCMAG"
+    elif t[2] == '<=' : print "\tCMEG"
+    elif t[2] == '==' : print "\tCMDG"
+    elif t[2] == '<>' : print "\tCMNE"
 
 def p_expression_uminus(t):
     'expression : MINUS expression %prec UMINUS'
@@ -230,19 +255,19 @@ def p_expression_number(t):
     'expression : NUMBER'
     print "\tCRCT "+ str(t[1])
     t[0] = t[1]
+    expression_tipo = "integer"
 
 def p_expression_id(t):
     'expression : ID'
-    try:
-        t[0] = names[t[1]]
-    except LookupError:
-        print "Undefined name '%s'" % t[1]
-        t[0] = 0
+    if tabela.exists(t[1]) :
+        print "\tCRVL " + str(tabela.getEnd(t[1]))
+        tipo.add(tabela.tabela[t[1]].tipo)
+    else:
+        sys.stderr.write("ERRO: variavel nao definida")
 
 def p_error(t):
     print "Syntax error at '%s'" % t.value
 
-import sys
 import ply.yacc as yacc
 yacc.yacc()
 
