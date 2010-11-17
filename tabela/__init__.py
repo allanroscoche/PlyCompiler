@@ -42,6 +42,9 @@ class Variavel:
     def getEndereco(self):
         return self.end
 
+    def imprime(self):
+        print str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)
+
 
 class Tipo:
     def __init__(self):
@@ -55,10 +58,14 @@ class Tipo:
             atual = self.tipoAtual[0]
             for i in self.tipoAtual:
                 if atual != i:
-                    print "ERRO"
-
+                    print "ERRO: "+i+" nao e compativel com "+atual
+                    raise SyntaxError
     def reset(self):
         self.tipoAtual = []
+
+    def imprime(self):
+        for i in self.tipoAtual:
+            print i
 
 
 class Tabela:
@@ -84,3 +91,7 @@ class Tabela:
         for a, b in self.tabela.items():
             if b.tipo == "undefined":
                 b.tipo = tipo
+
+    def imprime(self):
+        for a, b in self.tabela.items():
+            b.imprime()

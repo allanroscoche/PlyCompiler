@@ -139,7 +139,7 @@ def p_statement_tipo(t):
             | FLOAT   '''
     if t[1] == "integer":
         tabela.setType("integer")
-    else :
+    elif t[1]=="float" :
         tabela.setType("float")
 
 def p_statement_lista_identificadores(t):
@@ -205,7 +205,9 @@ def p_statement_atribuicao(t):
     'atribuicao : ID ATTRIB expression'
     if tabela.exists(t[1]):
             print "\tARMZ "+str(tabela.getEnd(t[1]))
+            tipo.add(tabela.tabela[t[1]].tipo)
             tipo.compara()
+            tipo.reset()
     else:
         sys.stderr.write("ERRO: variavel nao definida: "+t[1]+"\n")
         raise SyntaxError
@@ -279,3 +281,4 @@ while 1:
         break
 print s
 yacc.parse(s)
+#tabela.imprime()
