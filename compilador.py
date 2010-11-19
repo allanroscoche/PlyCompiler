@@ -82,7 +82,7 @@ import tabela
 rotulo = tabela.Rotulo()
 vars_g = tabela.VarGlobais()
 tipo = tabela.Tipo()
-tabela = tabela.Tabela()
+tabela = tabela.TabelaExtendida()
 
 # Parsing rules
 
@@ -120,10 +120,12 @@ def p_statement_subrotinas(t):
 
 def p_statement_funcao(t):
     'funcao : FUNCTION ID CMD comando_composto'
+    print "\tRTPR "
     print "funcao"
 
 def p_statement_procedimento(t):
     'procedimento : PROCEDURE ID CMD bloco CMD'
+    print "\tRTPR "
     print "procedimento"
 
 def p_statement_variaveis(t):
@@ -150,7 +152,7 @@ def p_statement_lista_identificadores_var(t):
     '''lista_identificadores_var : ID
                                  | ID VIRG lista_identificadores_var'''
     vars_g.add()
-    tabela.add(t[1],"undefined")
+    tabela.add(t[1])
 
 def p_statement_comando_composto(t):
     '''comando_composto : BEGIN comando END
@@ -177,14 +179,16 @@ def p_statement_chamada_procedimento(t):
 def p_statement_lista_identificadores_write(t):
     '''lista_identificadores_write : ID
                                    | ID VIRG lista_identificadores_write '''
-    print "\tCRVL " + str(tabela.getEnd(t[1]))
+    ident = tabela.getVar(t[1])
+    print "\tCRVL " + str(ident.getEnd())
     print "\tIMPR"
 
 def p_statement_lista_identificadores_read(t):
     '''lista_identificadores_read : ID
                                   | ID VIRG lista_identificadores_read'''
     print "\tLEIT"
-    print "\tARMZ " + str(tabela.getEnd(t[1]))
+    ident = tabela.getVar(t[1])
+    print "\tARMZ " + str(ident.getEnd())
 
 def p_statement_if(t):
     '''comando_condicional : IF expression_if THEN comando
@@ -204,10 +208,11 @@ def p_statement_while(t):
 def p_statement_atribuicao(t):
     'atribuicao : ID ATTRIB expression'
     if tabela.exists(t[1]):
-            print "\tARMZ "+str(tabela.getEnd(t[1]))
-            tipo.add(tabela.tabela[t[1]].tipo)
-            tipo.compara()
-            tipo.reset()
+        ident = tabela.getVar(t[1])
+        print "\tARMZ "+str(ident.getEnd())
+        tipo.add(ident.getTipo())
+        tipo.compara()
+        tipo.reset()
     else:
         sys.stderr.write("ERRO: variavel nao definida: "+t[1]+"\n")
         raise SyntaxError
@@ -262,8 +267,9 @@ def p_expression_number(t):
 def p_expression_id(t):
     'expression : ID'
     if tabela.exists(t[1]) :
-        print "\tCRVL " + str(tabela.getEnd(t[1]))
-        tipo.add(tabela.tabela[t[1]].tipo)
+        ident = tabela.getVar(t[1])
+        print "\tCRVL " + str(ident.getEnd())
+        tipo.add(ident.getTipo())
     else:
         sys.stderr.write("ERRO: variavel nao definida")
 

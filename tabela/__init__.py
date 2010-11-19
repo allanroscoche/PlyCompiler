@@ -39,8 +39,11 @@ class Variavel:
         self.end = end
         self.tipo = tipo
 
-    def getEndereco(self):
+    def getEnd(self):
         return self.end
+
+    def getTipo(self):
+        return self.tipo
 
     def imprime(self):
         print str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)
@@ -69,17 +72,18 @@ class Tipo:
 
 
 class Tabela:
-    def __init__(self):
+    def __init__(self, nivel):
         self.num = 0
         self.tabela = {}
+        self.nivel_lex = nivel
 
     def add(self, nome, tipo):
         variavel = Variavel(nome,self.num,tipo)
         self.tabela[nome] = variavel
         self.num += 1
 
-    def getEnd(self, nome):
-        return self.tabela[nome].getEndereco()
+    def getVar(self, nome):
+        return self.tabela[nome]
 
     def exists(self, nome):
         if nome in self.tabela:
@@ -95,3 +99,41 @@ class Tabela:
     def imprime(self):
         for a, b in self.tabela.items():
             b.imprime()
+
+class TabelaExtendida:
+    def __init__(self):
+        tabela = Tabela(0)
+        self.pilha = [ tabela ]
+        self.num_nivel = 0
+
+    def sobeNivel(self):
+        self.niveis += 1
+        tabela = Tabela(self.num_nivel)
+        self.pilha.append(tabela)
+
+    def desceNivel(self):
+        if self.num_nivel >= 0:
+            self.pilha.remove(self.num_nivel)
+            self.num_nivel -= 1
+
+    def add(self, nome):
+        self.pilha[self.num_nivel].add(nome,"undefined")
+
+    def setType(self, tipo):
+        self.pilha[self.num_nivel].setType(tipo)
+
+    def exists(self, nome):
+        existe = False
+        for i in self.pilha:
+            if i.exists(nome):
+                existe = True
+        return existe
+
+    def getVar(self, nome):
+        lista = range(self.num_nivel+1)
+        lista.reverse()
+        for i in lista:
+            if self.pilha[i].exists(nome):
+                return self.pilha[i].getVar(nome)
+        raise SyntaxError
+
