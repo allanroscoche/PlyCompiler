@@ -106,10 +106,10 @@ def p_statement_program(t):
     print "\tINPP"
 
 def p_statement_bloco(t):
-    '''bloco : variaveis subrotinas comando_composto
-             | variaveis comando_composto
-             | subrotinas comando_composto
-             | comando_composto '''
+    '''bloco : variaveis subrotinas comando_composto_inicial
+             | variaveis comando_composto_inicial
+             | subrotinas comando_composto_inicial
+             | comando_composto_inicial '''
     print "\tDMEM "+vars_g.total()
 
 def p_statement_subrotinas(t):
@@ -118,19 +118,30 @@ def p_statement_subrotinas(t):
                   | funcao subrotinas
                   | procedimento subrotinas'''
 
+
 def p_statement_funcao(t):
     'funcao : FUNCTION ID CMD comando_composto'
     print "\tRTPR "
     print "funcao"
 
 def p_statement_procedimento(t):
-    'procedimento : PROCEDURE ID CMD bloco CMD'
+    'procedimento : procedure ID CMD bloco CMD'
     print "\tRTPR "
-    print "procedimento"
+
+def p_statement_procedure(t):
+    'procedure : PROCEDURE'
+    rotulo.add()
+    print rotulo.nome() + "\tNADA"
+    rotulo.remove()
+    print "\tENPR"
 
 def p_statement_variaveis(t):
     'variaveis : VAR declaracao_variaveis'
     print "\tAMEM "+vars_g.imprime()
+    print "\tDSVS "+rotulo.nome()
+    rotulo.add()
+    rotulo.inicio = False
+
 
 def p_statement_declaracao_variaveis(t):
     '''declaracao_variaveis : lista_identificadores_var DPONTOS tipo CMD
@@ -153,6 +164,17 @@ def p_statement_lista_identificadores_var(t):
                                  | ID VIRG lista_identificadores_var'''
     vars_g.add()
     tabela.add(t[1])
+
+def p_statement_comando_composto_inicial(t):
+    '''comando_composto_inicial : begin comando END
+                                | begin comando mais_comandos END'''
+
+def p_statement_comando_begin(t):
+    'begin : BEGIN'
+    rotulo.remove()
+    print rotulo.nome()+"\tNADA"
+    rotulo.inicio = False
+
 
 def p_statement_comando_composto(t):
     '''comando_composto : BEGIN comando END

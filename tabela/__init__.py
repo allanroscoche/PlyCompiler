@@ -2,6 +2,8 @@ class Rotulo:
     def __init__(self):
         self.cont = 0
         self.num = [0]
+        self.desvio = False
+        self.inicio = True
 
     def nome(self):
         #print self.num
@@ -12,7 +14,7 @@ class Rotulo:
         self.num.append(self.cont)
 
     def remove(self):
-        self.num.remove(self.cont)
+        self.num.pop()
 
 class VarGlobais:
     def __init__(self):
