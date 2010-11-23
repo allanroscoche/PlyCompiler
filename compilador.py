@@ -110,7 +110,7 @@ def p_statement_bloco(t):
              | variaveis comando_composto_inicial
              | subrotinas comando_composto_inicial
              | comando_composto_inicial '''
-    print "\tDMEM "+vars_g.total()
+    print "\tDMEM "+str(tabela.getTam())
 
 def p_statement_subrotinas(t):
     '''subrotinas : funcao
@@ -122,22 +122,24 @@ def p_statement_subrotinas(t):
 def p_statement_funcao(t):
     'funcao : FUNCTION ID CMD comando_composto'
     print "\tRTPR "
-    print "funcao"
 
 def p_statement_procedimento(t):
-    'procedimento : procedure ID CMD bloco CMD'
+    'procedimento : procedure CMD bloco CMD'
     print "\tRTPR "
+    tabela.desceNivel()
 
 def p_statement_procedure(t):
-    'procedure : PROCEDURE'
+    'procedure : PROCEDURE ID'
     rotulo.add()
+    tabela.addFunc(t[2],rotulo.nome())
     print rotulo.nome() + "\tNADA"
     rotulo.remove()
-    print "\tENPR"
+    tabela.sobeNivel()
+    print "\tENPR "+tabela.getNivel()
 
 def p_statement_variaveis(t):
     'variaveis : VAR declaracao_variaveis'
-    print "\tAMEM "+vars_g.imprime()
+    print "\tAMEM "+str(tabela.getTam())
     print "\tDSVS "+rotulo.nome()
     rotulo.add()
     rotulo.inicio = False
@@ -163,7 +165,7 @@ def p_statement_lista_identificadores_var(t):
     '''lista_identificadores_var : ID
                                  | ID VIRG lista_identificadores_var'''
     vars_g.add()
-    tabela.add(t[1])
+    tabela.addVar(t[1])
 
 def p_statement_comando_composto_inicial(t):
     '''comando_composto_inicial : begin comando END
@@ -197,12 +199,14 @@ def p_statement_chamada_procedimento(t):
                             | WRITE LPAREN lista_identificadores_write RPAREN
                             | READ LPAREN lista_identificadores_read RPAREN
                             | ID LPAREN lista_identificadores RPAREN '''
+    if t[1] != "write" and t[1] != "read":
+        print "\tCHPR " + tabela.getVar(t[1]).getRotulo()
 
 def p_statement_lista_identificadores_write(t):
     '''lista_identificadores_write : ID
                                    | ID VIRG lista_identificadores_write '''
     ident = tabela.getVar(t[1])
-    print "\tCRVL " + str(ident.getEnd())
+    print "\tCRVL " + ident.getEnd()
     print "\tIMPR"
 
 def p_statement_lista_identificadores_read(t):
@@ -210,7 +214,7 @@ def p_statement_lista_identificadores_read(t):
                                   | ID VIRG lista_identificadores_read'''
     print "\tLEIT"
     ident = tabela.getVar(t[1])
-    print "\tARMZ " + str(ident.getEnd())
+    print "\tARMZ " + ident.getEnd()
 
 def p_statement_if(t):
     '''comando_condicional : IF expression_if THEN comando
@@ -231,7 +235,7 @@ def p_statement_atribuicao(t):
     'atribuicao : ID ATTRIB expression'
     if tabela.exists(t[1]):
         ident = tabela.getVar(t[1])
-        print "\tARMZ "+str(ident.getEnd())
+        print "\tARMZ "+ident.getEnd()
         tipo.add(ident.getTipo())
         tipo.compara()
         tipo.reset()
@@ -307,6 +311,6 @@ while 1:
         s += raw_input() + " "
     except EOFError:
         break
-print s
+#print s
 yacc.parse(s)
 #tabela.imprime()

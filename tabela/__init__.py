@@ -36,20 +36,38 @@ class VarGlobais:
         return tmp
 
 class Variavel:
-    def __init__(self,nome,end,tipo):
+    def __init__(self,nome,end,tipo,nivel_lexico):
         self.nome = nome
         self.end = end
         self.tipo = tipo
+        self.nivel_lexico = nivel_lexico
 
     def getEnd(self):
-        return self.end
+        endereco = str(self.nivel_lexico) + "," + str(self.end)
+        return endereco
 
     def getTipo(self):
         return self.tipo
 
+    def getNivel(self):
+        return self.nivel_lexico
+
     def imprime(self):
         print str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)
 
+class Function:
+    def __init__(self, nome, rotulo, tipo_retorno):
+        self.rotulo = rotulo
+        self.nome = nome
+        self.tipo = tipo_retorno
+        self.parametros = 0
+
+    def setTipo(self,tipo):
+        self.tipo = tipo
+
+
+    def getRotulo(self):
+        return "R"+str(self.rotulo)
 
 class Tipo:
     def __init__(self):
@@ -77,11 +95,16 @@ class Tabela:
     def __init__(self, nivel):
         self.num = 0
         self.tabela = {}
-        self.nivel_lex = nivel
+        self.nivel= nivel
 
-    def add(self, nome, tipo):
-        variavel = Variavel(nome,self.num,tipo)
+    def addVar(self, nome, tipo):
+        variavel = Variavel(nome,self.num,tipo,self.nivel)
         self.tabela[nome] = variavel
+        self.num += 1
+
+    def addFunc(self, nome, rotulo, retorno):
+        funcao = Function(nome, self.num, retorno)
+        self.tabela[nome] = funcao
         self.num += 1
 
     def getVar(self, nome):
@@ -95,8 +118,15 @@ class Tabela:
 
     def setType(self, tipo):
         for a, b in self.tabela.items():
-            if b.tipo == "undefined":
+            if b.tipo == "var":
                 b.tipo = tipo
+
+    def getTam(self):
+        tam = 0
+        for a, b in self.tabela.items():
+            if b.__class__.__name__ == "Variavel":
+                tam += 1
+        return tam
 
     def imprime(self):
         for a, b in self.tabela.items():
@@ -108,18 +138,24 @@ class TabelaExtendida:
         self.pilha = [ tabela ]
         self.num_nivel = 0
 
+    def getNivel(self):
+        return str(self.num_nivel)
+
     def sobeNivel(self):
-        self.niveis += 1
+        self.num_nivel += 1
         tabela = Tabela(self.num_nivel)
         self.pilha.append(tabela)
 
     def desceNivel(self):
         if self.num_nivel >= 0:
-            self.pilha.remove(self.num_nivel)
+            self.pilha.pop()
             self.num_nivel -= 1
 
-    def add(self, nome):
-        self.pilha[self.num_nivel].add(nome,"undefined")
+    def addVar(self, nome):
+        self.pilha[self.num_nivel].addVar(nome,"var")
+
+    def addFunc(self, nome, rotulo):
+        self.pilha[self.num_nivel].addFunc(nome, rotulo, "function")
 
     def setType(self, tipo):
         self.pilha[self.num_nivel].setType(tipo)
@@ -139,3 +175,5 @@ class TabelaExtendida:
                 return self.pilha[i].getVar(nome)
         raise SyntaxError
 
+    def getTam(self):
+        return self.pilha[self.num_nivel].getTam()
