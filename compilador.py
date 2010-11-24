@@ -124,7 +124,8 @@ def p_statement_funcao(t):
     print "\tRTPR "
 
 def p_statement_procedimento(t):
-    'procedimento : procedure CMD bloco CMD'
+    '''procedimento : procedure CMD bloco CMD
+                    | procedure LPAREN lista_identificadores_sub RPAREN CMD bloco CMD'''
     print "\tRTPR "
     tabela.desceNivel()
 
@@ -160,6 +161,11 @@ def p_statement_tipo(t):
 def p_statement_lista_identificadores(t):
     '''lista_identificadores : ID
                              | ID VIRG lista_identificadores'''
+
+def p_statement_lista_identificadores_sub(t):
+    '''lista_identificadores_sub : ID
+                                 | ID VIRG lista_identificadores_sub'''
+    
 
 def p_statement_lista_identificadores_var(t):
     '''lista_identificadores_var : ID
@@ -198,9 +204,15 @@ def p_statement_chamada_procedimento(t):
     '''chamada_procedimento : ID
                             | WRITE LPAREN lista_identificadores_write RPAREN
                             | READ LPAREN lista_identificadores_read RPAREN
-                            | ID LPAREN lista_identificadores RPAREN '''
+                            | ID LPAREN lista_identificadores_subprograma RPAREN '''
     if t[1] != "write" and t[1] != "read":
         print "\tCHPR " + tabela.getVar(t[1]).getRotulo()
+
+def p_statement_lista_identificadores_subprograma(t):
+    '''lista_identificadores_subprograma : ID
+                                         | ID VIRG lista_identificadores_subprograma '''
+    ident = tabela.getVar(t[1])
+    print "\tCRVL " + ident.getEnd()
 
 def p_statement_lista_identificadores_write(t):
     '''lista_identificadores_write : ID

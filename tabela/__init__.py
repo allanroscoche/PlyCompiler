@@ -56,15 +56,20 @@ class Variavel:
         print str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)
 
 class Function:
-    def __init__(self, nome, rotulo, tipo_retorno):
+    def __init__(self, nome, rotulo, tipo_retorno,nivel_lexico):
         self.rotulo = rotulo
         self.nome = nome
         self.tipo = tipo_retorno
-        self.parametros = 0
+        self.parametros = []
+        self.endvar = -3
+        self.nivel = nivel_lexico
 
     def setTipo(self,tipo):
         self.tipo = tipo
 
+    def addParam(self,nome,tipo):
+        parametro = Variavel(nome,self.envar,tipo,self.nivel)
+        self.parametros.append(parametro)
 
     def getRotulo(self):
         return "R"+str(self.rotulo)
@@ -103,7 +108,7 @@ class Tabela:
         self.num += 1
 
     def addFunc(self, nome, rotulo, retorno):
-        funcao = Function(nome, self.num, retorno)
+        funcao = Function(nome, self.num, retorno, self.nivel)
         self.tabela[nome] = funcao
         self.num += 1
 
