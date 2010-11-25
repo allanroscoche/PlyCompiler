@@ -230,13 +230,15 @@ def p_statement_lista_expressoes_subprograma(t):
                                     | expression
                                     | expression VIRG lista_expressoes_subprograma '''
     elem = tabela.useParam()
-    if elem.referencia:
-        if tabela.exists(t[1]):
-           ident = tabela.getVar(t[1])
-           print "\tCREN "+ident.getEnd()
+    if tabela.exists(t[1]):
+        ident = tabela.getVar(t[1])
+        if elem.referencia and not ident.referencia:
+            print "\tCREN "+ident.getEnd()
         else:
-            print "ERRO: expressao encontrada na passagem por referencia"
-            raise SyntaxError
+            print "\tCRVL "+ident.getEnd()
+    else:
+        print "ERRO: expressao encontrada na passagem por referencia"
+        raise SyntaxError
 
 def p_statement_lista_identificadores_write(t):
     '''lista_identificadores_write : ID
@@ -336,7 +338,7 @@ def p_expression_id(t):
         if ident.referencia:
             print "\tCRVI " + ident.getEnd()
         else:
-            print "\tCRVL " + str(ident.getEnd())
+            print "\tCRVL " + ident.getEnd()
         tipo.add(ident.getTipo())
     else:
         sys.stderr.write("ERRO: variavel nao definida:"+t[1]+"\n")
