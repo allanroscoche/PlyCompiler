@@ -1,11 +1,11 @@
 program exemplo9 (input, output);
 var x, y :  integer;
-procedure p;
+procedure p(b : integer) ;
    begin
-      y:=1
+      b:=1
    end;
 begin
    read(x);
-   p;
+   p(x);
    write(y)
 end.

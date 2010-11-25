@@ -124,7 +124,8 @@ def p_statement_funcao(t):
     print "\tRTPR "
 
 def p_statement_procedimento(t):
-    '''procedimento : procedure CMD bloco CMD'''
+    '''procedimento : procedure CMD bloco CMD
+                    | procedure LPAREN lista_identificadores_sub RPAREN CMD bloco CMD'''
     print "\tRTPR "
     tabela.desceNivel()
 
@@ -160,8 +161,11 @@ def p_statement_lista_identificadores(t):
                              | ID VIRG lista_identificadores'''
 
 def p_statement_lista_identificadores_sub(t):
-    '''lista_identificadores_sub : ID DPONTOS tipo
-                                 | ID DPONTOS tipo VIRG lista_identificadores_sub'''
+    '''lista_identificadores_sub : ID DPONTOS INTEGER
+                                 | ID DPONTOS FLOAT
+                                 | ID DPONTOS INTEGER VIRG lista_identificadores_sub
+                                 | ID DPONTOS FLOAT VIRG lista_identificadores_sub'''
+    tabela.addParam(t[1],t[3])
 
 def p_statement_lista_identificadores_var(t):
     '''lista_identificadores_var : ID
@@ -197,15 +201,15 @@ def p_statement_chamada_procedimento(t):
     '''chamada_procedimento : ID
                             | WRITE LPAREN lista_identificadores_write RPAREN
                             | READ LPAREN lista_identificadores_read RPAREN
-                            | ID LPAREN lista_identificadores_subprograma RPAREN '''
+                            | ID LPAREN lista_expressoes_subprograma RPAREN '''
     if t[1] != "write" and t[1] != "read":
         print "\tCHPR " + tabela.getVar(t[1]).getRotulo()
 
-def p_statement_lista_identificadores_subprograma(t):
-    '''lista_identificadores_subprograma : ID
-                                         | ID VIRG lista_identificadores_subprograma '''
-    ident = tabela.getVar(t[1])
-    print "\tCRVL " + ident.getEnd()
+def p_statement_lista_expressoes_subprograma(t):
+    '''lista_expressoes_subprograma : expression
+                                    | expression VIRG lista_expressoes_subprograma '''
+    #ident = tabela.getVar(t[1])
+    #print "\tCRVL " + ident.getEnd()
 
 def p_statement_lista_identificadores_write(t):
     '''lista_identificadores_write : ID
@@ -302,7 +306,8 @@ def p_expression_id(t):
         print "\tCRVL " + str(ident.getEnd())
         tipo.add(ident.getTipo())
     else:
-        sys.stderr.write("ERRO: variavel nao definida")
+        sys.stderr.write("ERRO: variavel nao definida:"+t[1]+"\n")
+        raise SyntaxError
 
 def p_error(t):
     print "Syntax error at '%s'" % t.value

@@ -35,10 +35,10 @@ class Variavel:
     def getNivel(self):
         return self.nivel_lexico
 
-    def imprime(self):
-        print str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)
+    def __str__(self):
+        return "-->\t"+str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)
 
-class Function:
+class Funcao:
     def __init__(self, nome, rotulo, tipo_retorno,nivel_lexico):
         self.rotulo = rotulo
         self.nome = nome
@@ -51,9 +51,14 @@ class Function:
         self.tipo = tipo
 
     def addParam(self,nome,tipo):
-        parametro = Variavel(nome,self.envar,tipo,self.nivel)
+        parametro = Variavel(nome,self.endvar,tipo,self.nivel)
         self.parametros.append(parametro)
         self.nivel -= 1
+        
+    def getParam(self,nome):
+        for i in self.parametros:
+            if i.nome == nome:
+                return i
 
     def getRotulo(self):
         return "R"+str(self.rotulo)
@@ -85,19 +90,23 @@ class Tabela:
         self.num = 0
         self.tabela = {}
         self.nivel= nivel
-        self.funcao = ""
 
-    def addVar(self, nome, tipo):
-        variavel = Variavel(nome,self.num,tipo,self.nivel)
+    def addVar(self, nome, tipo, endereco=False):
+        if not endereco:
+            endereco = self.num
+        variavel = Variavel(nome,endereco,tipo,self.nivel)
         self.tabela[nome] = variavel
         self.num += 1
 
     def addFunc(self, nome, rotulo, retorno):
-        funcao = Function(nome, self.num, retorno, self.nivel)
+        funcao = Funcao(nome, self.num, retorno, self.nivel)
         self.tabela[nome] = funcao
+        self.funcao = nome
         self.num += 1
+        return funcao
 
     def addParam(self, nome, tipo):
+        print self.tabela[self.funcao].nome+" 2"
         self.tabela[self.funcao].addParam(nome,tipo)
 
     def getVar(self, nome):
@@ -148,10 +157,12 @@ class TabelaExtendida:
         self.pilha[self.num_nivel].addVar(nome,"var")
 
     def addFunc(self, nome, rotulo):
-        self.pilha[self.num_nivel].addFunc(nome, rotulo, "function")
+        self.funcao = self.pilha[self.num_nivel].addFunc(nome, rotulo, "function")
 
     def addParam(self, nome, tipo):
-        self.pilha[self.num_nivel].addParam(nome,tipo)
+        self.funcao.addParam(nome,tipo)
+        param = self.funcao.getParam(nome)
+        self.pilha[self.num_nivel].addVar(nome,tipo, param.end)
 
     def setType(self, tipo):
         self.pilha[self.num_nivel].setType(tipo)
