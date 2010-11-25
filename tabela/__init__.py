@@ -19,11 +19,12 @@ class Rotulo:
         self.num.pop()
 
 class Variavel:
-    def __init__(self,nome,end,tipo,nivel_lexico):
+    def __init__(self,nome,end,tipo,nivel_lexico,referencia=False):
         self.nome = nome
         self.end = end
         self.tipo = tipo
         self.nivel_lexico = nivel_lexico
+        self.referencia = referencia
 
     def getEnd(self):
         endereco = str(self.nivel_lexico) + "," + str(self.end)
@@ -36,7 +37,7 @@ class Variavel:
         return self.nivel_lexico
 
     def __str__(self):
-        return "-->\t"+str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)
+        return "-->\t"+str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)+"\t"+str(self.referencia)
 
 class Funcao:
     def __init__(self, nome, rotulo, tipo_retorno,nivel_lexico):
@@ -50,15 +51,18 @@ class Funcao:
     def setTipo(self,tipo):
         self.tipo = tipo
 
-    def addParam(self,nome,tipo):
-        parametro = Variavel(nome,self.endvar,tipo,self.nivel)
+    def addParam(self,nome,tipo,referencia=False):
+        parametro = Variavel(nome,self.endvar,tipo,self.nivel,referencia)
         self.parametros.append(parametro)
         self.nivel -= 1
-        
+
     def getParam(self,nome):
         for i in self.parametros:
             if i.nome == nome:
                 return i
+
+    def useParam(self):
+        return self.parametros.pop()
 
     def getRotulo(self):
         return "R"+str(self.rotulo)
@@ -91,10 +95,10 @@ class Tabela:
         self.tabela = {}
         self.nivel= nivel
 
-    def addVar(self, nome, tipo, endereco=False):
+    def addVar(self, nome, tipo, endereco=False, referencia=False):
         if not endereco:
             endereco = self.num
-        variavel = Variavel(nome,endereco,tipo,self.nivel)
+        variavel = Variavel(nome,endereco,tipo,self.nivel,referencia)
         self.tabela[nome] = variavel
         self.num += 1
 
@@ -106,7 +110,7 @@ class Tabela:
         return funcao
 
     def addParam(self, nome, tipo):
-        print self.tabela[self.funcao].nome+" 2"
+        #print self.tabela[self.funcao].nome+" 2"
         self.tabela[self.funcao].addParam(nome,tipo)
 
     def getVar(self, nome):
@@ -159,10 +163,13 @@ class TabelaExtendida:
     def addFunc(self, nome, rotulo):
         self.funcao = self.pilha[self.num_nivel].addFunc(nome, rotulo, "function")
 
-    def addParam(self, nome, tipo):
-        self.funcao.addParam(nome,tipo)
+    def addParam(self, nome, tipo, referencia = False):
+        self.funcao.addParam(nome,tipo, referencia )
         param = self.funcao.getParam(nome)
-        self.pilha[self.num_nivel].addVar(nome,tipo, param.end)
+        self.pilha[self.num_nivel].addVar(nome,tipo, param.end, referencia)
+
+    def useParam(self):
+        return self.funcao.useParam()
 
     def setType(self, tipo):
         self.pilha[self.num_nivel].setType(tipo)
@@ -180,6 +187,7 @@ class TabelaExtendida:
         for i in lista:
             if self.pilha[i].exists(nome):
                 return self.pilha[i].getVar(nome)
+        print "Variavel nao existente"
         raise SyntaxError
 
     def getTam(self):

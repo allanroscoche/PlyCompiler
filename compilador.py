@@ -17,7 +17,10 @@ reserved = {
     'read'     :  'READ',
     'function' :  'FUNCTION',
     'procedure':  'PROCEDURE',
-    'div'      :  'DIVIDE'
+    'div'      :  'DIVIDE',
+    'var'      :  'VAR',
+    'input'    :  'INPUT',
+    'output'   :  'OUTPUT'
     }
 
 tokens = [
@@ -97,8 +100,16 @@ names = { }
 
 def p_statement_init(t):
     '''programa : program ID CMD bloco FIM
-                | program ID LPAREN lista_identificadores RPAREN CMD bloco FIM'''
+                | program ID LPAREN lista_identificadores_programa RPAREN CMD bloco FIM'''
     print "\tPARA"
+
+
+def p_statement_lista_identificadores_programa(t):
+    '''lista_identificadores_programa : INPUT
+                                      | OUTPUT
+                                      | INPUT VIRG lista_identificadores_programa
+                                      | OUTPUT VIRG lista_identificadores_programa'''
+
 
 def p_statement_program(t):
     'program : PROGRAM'
@@ -156,16 +167,25 @@ def p_statement_tipo(t):
     elif t[1]=="float" :
         tabela.setType("float")
 
-def p_statement_lista_identificadores(t):
-    '''lista_identificadores : ID
-                             | ID VIRG lista_identificadores'''
+#def p_statement_lista_identificadores(t):
+#    '''lista_identificadores : ID
+#                             | ID VIRG lista_identificadores'''
+
 
 def p_statement_lista_identificadores_sub(t):
-    '''lista_identificadores_sub : ID DPONTOS INTEGER
-                                 | ID DPONTOS FLOAT
-                                 | ID DPONTOS INTEGER VIRG lista_identificadores_sub
-                                 | ID DPONTOS FLOAT VIRG lista_identificadores_sub'''
-    tabela.addParam(t[1],t[3])
+    '''lista_identificadores_sub : parametro_formal
+                                 | parametro_formal VIRG lista_identificadores_sub'''
+    #tabela.addParam(t[1],t[3])
+
+def p_stamtement_parametro_formal(t):
+    '''parametro_formal : VAR ID DPONTOS INTEGER
+                        | ID DPONTOS INTEGER
+                        | ID DPONTOS FLOAT
+                        | VAR ID DPONTOS FLOAT '''
+    if(t[1] == "var"):
+        tabela.addParam(t[2],t[4],True)
+    else:
+        tabela.addParam(t[1],t[3])
 
 def p_statement_lista_identificadores_var(t):
     '''lista_identificadores_var : ID
@@ -206,10 +226,17 @@ def p_statement_chamada_procedimento(t):
         print "\tCHPR " + tabela.getVar(t[1]).getRotulo()
 
 def p_statement_lista_expressoes_subprograma(t):
-    '''lista_expressoes_subprograma : expression
+    '''lista_expressoes_subprograma : ID
+                                    | expression
                                     | expression VIRG lista_expressoes_subprograma '''
-    #ident = tabela.getVar(t[1])
-    #print "\tCRVL " + ident.getEnd()
+    elem = tabela.useParam()
+    if elem.referencia:
+        if tabela.exists(t[1]):
+           ident = tabela.getVar(t[1])
+           print "\tCREN "+ident.getEnd()
+        else:
+            print "ERRO: expressao encontrada na passagem por referencia"
+            raise SyntaxError
 
 def p_statement_lista_identificadores_write(t):
     '''lista_identificadores_write : ID
@@ -244,7 +271,10 @@ def p_statement_atribuicao(t):
     'atribuicao : ID ATTRIB expression'
     if tabela.exists(t[1]):
         ident = tabela.getVar(t[1])
-        print "\tARMZ "+ident.getEnd()
+        if ident.referencia:
+            print "\tARMI "+ident.getEnd()
+        else:
+            print "\tARMZ "+ident.getEnd()
         tipo.add(ident.getTipo())
         tipo.compara()
         tipo.reset()
@@ -303,7 +333,10 @@ def p_expression_id(t):
     'expression : ID'
     if tabela.exists(t[1]) :
         ident = tabela.getVar(t[1])
-        print "\tCRVL " + str(ident.getEnd())
+        if ident.referencia:
+            print "\tCRVI " + ident.getEnd()
+        else:
+            print "\tCRVL " + str(ident.getEnd())
         tipo.add(ident.getTipo())
     else:
         sys.stderr.write("ERRO: variavel nao definida:"+t[1]+"\n")
