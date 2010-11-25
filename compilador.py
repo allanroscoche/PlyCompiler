@@ -80,7 +80,6 @@ lex.lex()
 
 import tabela
 rotulo = tabela.Rotulo()
-vars_g = tabela.VarGlobais()
 tipo = tabela.Tipo()
 tabela = tabela.TabelaExtendida()
 
@@ -104,6 +103,8 @@ def p_statement_init(t):
 def p_statement_program(t):
     'program : PROGRAM'
     print "\tINPP"
+    print "\tDSVS "+rotulo.nome()
+    rotulo.add()
 
 def p_statement_bloco(t):
     '''bloco : variaveis subrotinas comando_composto_inicial
@@ -118,33 +119,29 @@ def p_statement_subrotinas(t):
                   | funcao subrotinas
                   | procedimento subrotinas'''
 
-
 def p_statement_funcao(t):
     'funcao : FUNCTION ID CMD comando_composto'
     print "\tRTPR "
 
 def p_statement_procedimento(t):
-    '''procedimento : procedure CMD bloco CMD
-                    | procedure LPAREN lista_identificadores_sub RPAREN CMD bloco CMD'''
+    '''procedimento : procedure CMD bloco CMD'''
     print "\tRTPR "
     tabela.desceNivel()
 
 def p_statement_procedure(t):
     'procedure : PROCEDURE ID'
+    print "\tDSVS "+rotulo.nome()
     rotulo.add()
     tabela.addFunc(t[2],rotulo.nome())
     print rotulo.nome() + "\tNADA"
     rotulo.remove()
     tabela.sobeNivel()
     print "\tENPR "+tabela.getNivel()
+    rotulo.add()
 
 def p_statement_variaveis(t):
     'variaveis : VAR declaracao_variaveis'
     print "\tAMEM "+str(tabela.getTam())
-    print "\tDSVS "+rotulo.nome()
-    rotulo.add()
-    rotulo.inicio = False
-
 
 def p_statement_declaracao_variaveis(t):
     '''declaracao_variaveis : lista_identificadores_var DPONTOS tipo CMD
@@ -163,14 +160,12 @@ def p_statement_lista_identificadores(t):
                              | ID VIRG lista_identificadores'''
 
 def p_statement_lista_identificadores_sub(t):
-    '''lista_identificadores_sub : ID
-                                 | ID VIRG lista_identificadores_sub'''
-    
+    '''lista_identificadores_sub : ID DPONTOS tipo
+                                 | ID DPONTOS tipo VIRG lista_identificadores_sub'''
 
 def p_statement_lista_identificadores_var(t):
     '''lista_identificadores_var : ID
                                  | ID VIRG lista_identificadores_var'''
-    vars_g.add()
     tabela.addVar(t[1])
 
 def p_statement_comando_composto_inicial(t):
@@ -181,8 +176,6 @@ def p_statement_comando_begin(t):
     'begin : BEGIN'
     rotulo.remove()
     print rotulo.nome()+"\tNADA"
-    rotulo.inicio = False
-
 
 def p_statement_comando_composto(t):
     '''comando_composto : BEGIN comando END

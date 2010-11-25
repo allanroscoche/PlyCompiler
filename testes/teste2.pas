@@ -1,10 +1,11 @@
-program exemplo73 (input, output);
-begin
-   read (n);
-   s:=0;
-   while s<5 do
+program exemplo9 (input, output);
+var x, y :  integer;
+procedure p;
    begin
-      s:=s+1;
-      i:=0
-   end
-end. 
+      y:=1
+   end;
+begin
+   read(x);
+   p;
+   write(y)
+end.

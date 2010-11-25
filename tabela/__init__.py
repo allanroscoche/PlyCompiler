@@ -2,12 +2,14 @@ class Rotulo:
     def __init__(self):
         self.cont = 0
         self.num = [0]
-        self.desvio = False
-        self.inicio = True
+        #self.desvio = False
+        #self.inicio = True
 
     def nome(self):
-        #print self.num
-        return "R"+str(self.num[len(self.num)-1])
+        if len(self.num) > 0:
+            return "R"+str(self.num[len(self.num)-1])
+        else:
+            return "0"
 
     def add(self):
         self.cont += 1
@@ -15,25 +17,6 @@ class Rotulo:
 
     def remove(self):
         self.num.pop()
-
-class VarGlobais:
-    def __init__(self):
-        self.cont = 0
-        self.alocado = 0
-
-    def add(self):
-        self.cont += 1
-
-    def imprime(self):
-        tmp = str(self.cont)
-        self.alocado = self.cont
-        self.cont = 0
-        return tmp
-
-    def total(self):
-        tmp = str(self.alocado)
-        self.alocado = 0
-        return tmp
 
 class Variavel:
     def __init__(self,nome,end,tipo,nivel_lexico):
@@ -61,7 +44,7 @@ class Function:
         self.nome = nome
         self.tipo = tipo_retorno
         self.parametros = []
-        self.endvar = -3
+        self.endvar = -4
         self.nivel = nivel_lexico
 
     def setTipo(self,tipo):
@@ -70,6 +53,7 @@ class Function:
     def addParam(self,nome,tipo):
         parametro = Variavel(nome,self.envar,tipo,self.nivel)
         self.parametros.append(parametro)
+        self.nivel -= 1
 
     def getRotulo(self):
         return "R"+str(self.rotulo)
@@ -101,6 +85,7 @@ class Tabela:
         self.num = 0
         self.tabela = {}
         self.nivel= nivel
+        self.funcao = ""
 
     def addVar(self, nome, tipo):
         variavel = Variavel(nome,self.num,tipo,self.nivel)
@@ -111,6 +96,9 @@ class Tabela:
         funcao = Function(nome, self.num, retorno, self.nivel)
         self.tabela[nome] = funcao
         self.num += 1
+
+    def addParam(self, nome, tipo):
+        self.tabela[self.funcao].addParam(nome,tipo)
 
     def getVar(self, nome):
         return self.tabela[nome]
@@ -161,6 +149,9 @@ class TabelaExtendida:
 
     def addFunc(self, nome, rotulo):
         self.pilha[self.num_nivel].addFunc(nome, rotulo, "function")
+
+    def addParam(self, nome, tipo):
+        self.pilha[self.num_nivel].addParam(nome,tipo)
 
     def setType(self, tipo):
         self.pilha[self.num_nivel].setType(tipo)
