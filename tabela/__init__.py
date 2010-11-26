@@ -33,6 +33,9 @@ class Variavel:
     def getTipo(self):
         return self.tipo
 
+    def eFuncao(self):
+        return False
+
     def getNivel(self):
         return self.nivel_lexico
 
@@ -40,32 +43,53 @@ class Variavel:
         return "-->\t"+str(self.nome)+"\t"+str(self.end)+"\t"+str(self.tipo)+"\t"+str(self.referencia)
 
 class Funcao:
-    def __init__(self, nome, rotulo, tipo_retorno,nivel_lexico):
+    def __init__(self, nome, rotulo, tipo_retorno, nivel_lexico):
         self.rotulo = rotulo
         self.nome = nome
         self.tipo = tipo_retorno
         self.parametros = []
+        self.parametros_usados = []
         self.endvar = -4
         self.nivel = nivel_lexico
+        self.retorno = Variavel(nome+"r",self.endvar, tipo_retorno, self.nivel)
 
     def setTipo(self,tipo):
         self.tipo = tipo
+        self.retorno.tipo = tipo
 
     def addParam(self,nome,tipo,referencia=False):
         parametro = Variavel(nome,self.endvar,tipo,self.nivel,referencia)
         self.parametros.append(parametro)
         self.nivel -= 1
+        self.retorno.endereco = -4 - len(self.parametros)
+        self.resetParam()
 
     def getParam(self,nome):
         for i in self.parametros:
             if i.nome == nome:
                 return i
 
+    def eFuncao(self):
+        return True
+
+    def resetParam(self):
+        self.parametros_usados = []
+        for i in self.parametros:
+            self.parametros_usados.append(i)
+        #print self.parametros_usados
+
     def useParam(self):
-        return self.parametros.pop()
+        return self.parametros_usados.pop()
 
     def getRotulo(self):
         return "R"+str(self.rotulo)
+
+    def __str__(self):
+        saida = ""
+        for a in self.parametros_usados:
+            saida += a.nome + " "
+        return saida
+
 
 class Tipo:
     def __init__(self):
@@ -83,10 +107,6 @@ class Tipo:
                     raise SyntaxError
     def reset(self):
         self.tipoAtual = []
-
-    def imprime(self):
-        for i in self.tipoAtual:
-            print i
 
 
 class Tabela:
@@ -160,8 +180,8 @@ class TabelaExtendida:
     def addVar(self, nome):
         self.pilha[self.num_nivel].addVar(nome,"var")
 
-    def addFunc(self, nome, rotulo):
-        self.funcao = self.pilha[self.num_nivel].addFunc(nome, rotulo, "function")
+    def addFunc(self, nome, rotulo, retorno = "procedure"):
+        self.funcao = self.pilha[self.num_nivel].addFunc(nome, rotulo, retorno)
 
     def addParam(self, nome, tipo, referencia = False):
         self.funcao.addParam(nome,tipo, referencia )
@@ -170,6 +190,9 @@ class TabelaExtendida:
 
     def useParam(self):
         return self.funcao.useParam()
+
+    def resetParam(self):
+        self.funcao.resetParam()
 
     def setType(self, tipo):
         self.pilha[self.num_nivel].setType(tipo)

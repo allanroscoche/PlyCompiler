@@ -131,13 +131,32 @@ def p_statement_subrotinas(t):
                   | procedimento subrotinas'''
 
 def p_statement_funcao(t):
-    'funcao : FUNCTION ID CMD comando_composto'
-    print "\tRTPR "
+    '''funcao : function CMD DPONTOS tipo_retorno bloco CMD
+              | function LPAREN lista_identificadores_sub RPAREN DPONTOS tipo_retorno CMD bloco CMD'''
+    print "\tRTPR "+tabela.getNivel()
+
+
+def p_statemente_function(t):
+    'function : FUNCTION ID'
+    print "\tDSVS "+rotulo.nome()
+    rotulo.add()
+    tabela.addFunc(t[2],rotulo.nome())
+    print rotulo.nome()+ "\tNADA"
+    rotulo.remove()
+    tabela.sobeNivel()
+    print "\tENPR "+tabela.getNivel()
+    rotulo.add()
+    tabela.resetParam()
+
+def p_statement_tipo_retorno(t):
+    '''tipo_retorno : INTEGER
+                    | FLOAT '''
+    tabela.funcao.setTipo(t[1])
 
 def p_statement_procedimento(t):
     '''procedimento : procedure CMD bloco CMD
                     | procedure LPAREN lista_identificadores_sub RPAREN CMD bloco CMD'''
-    print "\tRTPR "
+    print "\tRTPR "+tabela.getNivel()
     tabela.desceNivel()
 
 def p_statement_procedure(t):
@@ -150,6 +169,7 @@ def p_statement_procedure(t):
     tabela.sobeNivel()
     print "\tENPR "+tabela.getNivel()
     rotulo.add()
+    tabela.resetParam()
 
 def p_statement_variaveis(t):
     'variaveis : VAR declaracao_variaveis'
@@ -166,10 +186,6 @@ def p_statement_tipo(t):
         tabela.setType("integer")
     elif t[1]=="float" :
         tabela.setType("float")
-
-#def p_statement_lista_identificadores(t):
-#    '''lista_identificadores : ID
-#                             | ID VIRG lista_identificadores'''
 
 
 def p_statement_lista_identificadores_sub(t):
@@ -213,21 +229,23 @@ def p_statement_mais_comandos(t):
 def p_statement_comando(t):
     '''comando : comando_composto
                | atribuicao
-               | chamada_procedimento
+               | chamada_subprograma
                | comando_repetitivo
                | comando_condicional'''
 
 def p_statement_chamada_procedimento(t):
-    '''chamada_procedimento : ID
+    '''chamada_subprograma  : ID
                             | WRITE LPAREN lista_identificadores_write RPAREN
                             | READ LPAREN lista_identificadores_read RPAREN
                             | ID LPAREN lista_expressoes_subprograma RPAREN '''
     if t[1] != "write" and t[1] != "read":
         print "\tCHPR " + tabela.getVar(t[1]).getRotulo()
+        tabela.resetParam()
 
 def p_statement_lista_expressoes_subprograma(t):
     '''lista_expressoes_subprograma : ID
                                     | expression
+                                    | ID VIRG lista_expressoes_subprograma
                                     | expression VIRG lista_expressoes_subprograma '''
     elem = tabela.useParam()
     if tabela.exists(t[1]):
@@ -236,8 +254,8 @@ def p_statement_lista_expressoes_subprograma(t):
             print "\tCREN "+ident.getEnd()
         else:
             print "\tCRVL "+ident.getEnd()
-    else:
-        print "ERRO: expressao encontrada na passagem por referencia"
+    elif elem.referencia:
+        print "ERRO: expressao encontrada na passagem por referencia ",elem
         raise SyntaxError
 
 def p_statement_lista_identificadores_write(t):
@@ -273,6 +291,9 @@ def p_statement_atribuicao(t):
     'atribuicao : ID ATTRIB expression'
     if tabela.exists(t[1]):
         ident = tabela.getVar(t[1])
+        if ident.eFuncao():
+            ident = ident.retorno
+            tabela.resetParam()
         if ident.referencia:
             print "\tARMI "+ident.getEnd()
         else:
@@ -316,6 +337,12 @@ def p_expression_binop(t):
     elif t[2] == '<=' : print "\tCMEG"
     elif t[2] == '==' : print "\tCMDG"
     elif t[2] == '<>' : print "\tCMNE"
+
+def p_expression_function_exp(t):
+    'expression : ID LPAREN lista_expressoes_subprograma RPAREN'
+    if tabela.exists(t[1]):
+        ident = tabela.getVar(t[1])
+        print "\tCHPR " + ident.getRotulo()
 
 def p_expression_uminus(t):
     'expression : MINUS expression %prec UMINUS'
