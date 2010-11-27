@@ -1,0 +1,43 @@
+\documentclass[12pt,a4paper]{article}
+ 
+\usepackage[brazil]{babel}
+\usepackage[latin1]{inputenc}
+\title{Analizador Léxico}
+\author{Allan de Oliveira Roscoche, Fernando Cezar Bernardelli }
+ 
+\begin{document}
+\maketitle
+
+\section{Uso:}
+
+\begin{verbatim}
+./compilador < codigo_fonte.pas > codigo_mepa
+\end{verbatim}
+
+O programa lê da entrada padrão e escreve na saída padrão.
+Não possui nenhum argumento ou opção.
+
+\section{Implementação}
+
+O trabalho foi relizado em Python com o uso da ferramente Lex e Yacc
+para Python o PLY.
+Fio realizada uma tradução dirigida por sintaxe e utilizado o algoritmo
+padrão para a análise sintática do PLY, o LALR.
+A gramática utilizada foi baseada na gramática do livro com diferenças
+apenas em algumas regras para facilitar a geração do código.
+Foi criada uma biblioteca para lidar com a tabela de símbolos que está
+dentro da pasta tabela.
+O arquivo com o código fonte é o mesmo com o executável \emph{compilador.py}.
+
+
+\section{Dificuldades e limitações de uso}
+Uma das maiores dificuldades foi conseguir conciliar as limitações das
+ferramentas(lex-yacc) com a gramática para a geração de código.
+Algumas técnicas foram utilizadas para superar essas limitações como por
+exemplo criar regras separadas para construções gramaticalmente iguais.
+Uma das limitações é a não detecção do erro do último exemplo que o Free
+Pascal Compiler mostra. Os avisos de erro também não contém informações
+o suficiente para depurar o código, sendo difícil detectar onde ocorreu
+o erro.
+
+\end{document}
