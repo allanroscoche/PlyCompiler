@@ -18,6 +18,20 @@ class Rotulo:
     def remove(self):
         self.num.pop()
 
+class Label:
+    def __init__(self,numero,rotulo,nivel_lexico):
+        self.numero = numero
+        self.rotulo = rotulo
+        self.nivel = nivel_lexico
+        self.tipo = "label"
+
+    def getEndGo(self, nivel):
+        endereco = str(self.rotulo) + "," + str(nivel) + "," + str(self.nivel)
+        return endereco
+
+    def getEnd(self):
+        return self.rotulo
+
 class Variavel:
     def __init__(self,nome,end,tipo,nivel_lexico,referencia=False):
         self.nome = nome
@@ -79,13 +93,17 @@ class Funcao:
         #print self.parametros_usados
 
     def useParam(self):
-        return self.parametros_usados.pop()
+        if len(self.parametros_usados) > 0 :
+            return self.parametros_usados.pop()
+        else:
+            print self
+            raise SyntaxError
 
     def getRotulo(self):
         return "R"+str(self.rotulo)
 
     def __str__(self):
-        saida = ""
+        saida = self.nome + ":"
         for a in self.parametros_usados:
             saida += a.nome + " "
         return saida
@@ -121,6 +139,10 @@ class Tabela:
         variavel = Variavel(nome,endereco,tipo,self.nivel,referencia)
         self.tabela[nome] = variavel
         self.num += 1
+
+    def addLabel(self,numero,rotulo,nivel):
+        rotulo = Label(numero,rotulo,nivel)
+        self.tabela[numero] = rotulo
 
     def addFunc(self, nome, rotulo, retorno):
         funcao = Funcao(nome, self.num, retorno, self.nivel)
@@ -177,6 +199,9 @@ class TabelaExtendida:
             self.pilha.pop()
             self.num_nivel -= 1
 
+    def addLabel(self,numero,rotulo):
+        self.pilha[self.num_nivel].addLabel(numero,rotulo,self.num_nivel)
+
     def addVar(self, nome):
         self.pilha[self.num_nivel].addVar(nome,"var")
 
@@ -197,6 +222,9 @@ class TabelaExtendida:
     def setType(self, tipo):
         self.pilha[self.num_nivel].setType(tipo)
 
+    def getLenTab(self):
+        return len(self.pilha[self.num_nivel].tabela)
+
     def exists(self, nome):
         existe = False
         for i in self.pilha:
@@ -212,6 +240,14 @@ class TabelaExtendida:
                 return self.pilha[i].getVar(nome)
         print "Variavel nao existente"
         raise SyntaxError
+
+    def setFunc(self, nome):
+        lista = range(self.num_nivel+1)
+        lista.reverse()
+        for i in lista:
+            if self.pilha[i].exists(nome):
+                self.funcao = self.pilha[i].getVar(nome)
+                break
 
     def getTam(self):
         return self.pilha[self.num_nivel].getTam()

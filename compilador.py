@@ -20,7 +20,9 @@ reserved = {
     'div'      :  'DIVIDE',
     'var'      :  'VAR',
     'input'    :  'INPUT',
-    'output'   :  'OUTPUT'
+    'output'   :  'OUTPUT',
+    'label'    :  'LABEL',
+    'goto'     :  'GOTO'
     }
 
 tokens = [
@@ -118,11 +120,25 @@ def p_statement_program(t):
     rotulo.add()
 
 def p_statement_bloco(t):
-    '''bloco : variaveis subrotinas comando_composto_inicial
+    '''bloco : rotulos variaveis subrotinas comando_composto_inicial
+             | variaveis subrotinas comando_composto_inicial
+             | rotulos variaveis comando_composto_inicial
              | variaveis comando_composto_inicial
+             | rotulos subrotinas comando_composto_inicial
              | subrotinas comando_composto_inicial
-             | comando_composto_inicial '''
+             | rotulos comando_composto_inicial
+             | comando_composto_inicial'''
     print "\tDMEM "+str(tabela.getTam())
+
+def p_statement_rotulos(t):
+    'rotulos : LABEL lista_numeros CMD'
+
+def p_statement_lista_numeros(t):
+    '''lista_numeros : NUMBER
+                     | NUMBER VIRG lista_numeros'''
+    rotulo.add()
+    tabela.addLabel(t[1],rotulo.nome())
+    rotulo.remove()
 
 def p_statement_subrotinas(t):
     '''subrotinas : funcao
@@ -227,20 +243,40 @@ def p_statement_mais_comandos(t):
                      | CMD '''
 
 def p_statement_comando(t):
-    '''comando : comando_composto
-               | atribuicao
-               | chamada_subprograma
-               | comando_repetitivo
-               | comando_condicional'''
+    '''comando : NUMBER DPONTOS comando_sem_rotulo
+               | comando_sem_rotulo'''
+    if len(t) > 2:
+        label = tabela.getVar(t[1])
+        print label.getEnd() + "\tNADA"
+        print "\tENRT "+str(tabela.getNivel())+","+str(tabela.getLenTab())
+
+def p_statement_comando_sem_rotulo(t):
+    '''comando_sem_rotulo : comando_composto
+                          | atribuicao
+                          | desvio
+                          | chamada_subprograma
+                          | comando_repetitivo
+                          | comando_condicional'''
+
+def p_statement_desvio(t):
+    ' desvio : GOTO NUMBER'
+    label = tabela.getVar(t[2])
+    print "\tDSVR " + label.getEndGo(tabela.getNivel())
 
 def p_statement_chamada_procedimento(t):
-    '''chamada_subprograma  : ID
+    '''chamada_subprograma  : id_sub
                             | WRITE LPAREN lista_identificadores_write RPAREN
                             | READ LPAREN lista_identificadores_read RPAREN
-                            | ID LPAREN lista_expressoes_subprograma RPAREN '''
+                            | id_sub LPAREN lista_expressoes_subprograma RPAREN '''
     if t[1] != "write" and t[1] != "read":
         print "\tCHPR " + tabela.getVar(t[1]).getRotulo()
-        tabela.resetParam()
+
+
+def p_statement_id_sub(t):
+    'id_sub : ID'
+    tabela.setFunc(t[1])
+    tabela.resetParam()
+    t[0] = t[1]
 
 def p_statement_lista_expressoes_subprograma(t):
     '''lista_expressoes_subprograma : ID
@@ -339,10 +375,9 @@ def p_expression_binop(t):
     elif t[2] == '<>' : print "\tCMNE"
 
 def p_expression_function_exp(t):
-    'expression : ID LPAREN lista_expressoes_subprograma RPAREN'
+    'expression : id_sub LPAREN lista_expressoes_subprograma RPAREN'
     if tabela.exists(t[1]):
         ident = tabela.getVar(t[1])
-        tabela.resetParam()
         print "\tCHPR " + ident.getRotulo()
 
 def p_expression_uminus(t):
