@@ -190,7 +190,7 @@ def p_statement_tipo(t):
 
 def p_statement_lista_identificadores_sub(t):
     '''lista_identificadores_sub : parametro_formal
-                                 | parametro_formal VIRG lista_identificadores_sub'''
+                                 | parametro_formal CMD lista_identificadores_sub'''
     #tabela.addParam(t[1],t[3])
 
 def p_stamtement_parametro_formal(t):
@@ -342,6 +342,7 @@ def p_expression_function_exp(t):
     'expression : ID LPAREN lista_expressoes_subprograma RPAREN'
     if tabela.exists(t[1]):
         ident = tabela.getVar(t[1])
+        tabela.resetParam()
         print "\tCHPR " + ident.getRotulo()
 
 def p_expression_uminus(t):
